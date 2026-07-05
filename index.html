@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d0b1e">
+<title>El Reloj Lunar · para Lala Meteora</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M62 8a44 44 0 1 0 0 84 40 40 0 0 1 0-84z' fill='%23d4af6a'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0b1e;
+    --bg-deep: #05040f;
+    --gold: #d4af6a;
+    --gold-bright: #f0d49a;
+    --gold-dim: #8a7550;
+    --ink: #e8dcc0;
+    --ink-dim: #a5987d;
+    --card: #131028;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: radial-gradient(ellipse at 50% 38%, #1a1633 0%, var(--bg) 55%, var(--bg-deep) 100%);
+    color: var(--ink);
+    font-family: "Cormorant Garamond", Georgia, serif;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* ── Tarot card frame ─────────────────────────────── */
+  .frame {
+    position: fixed;
+    inset: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom)) 8px;
+    border: 1px solid var(--gold-dim);
+    outline: 1px solid var(--gold);
+    outline-offset: 3px;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .corner { position: absolute; width: 34px; height: 34px; color: var(--gold); }
+  .corner svg { width: 100%; height: 100%; display: block; }
+  .corner.tl { top: -5px; left: -5px; }
+  .corner.tr { top: -5px; right: -5px; transform: scaleX(-1); }
+  .corner.bl { bottom: -5px; left: -5px; transform: scaleY(-1); }
+  .corner.br { bottom: -5px; right: -5px; transform: scale(-1); }
+
+  /* ── Layout ───────────────────────────────────────── */
+  .card {
+    height: 100%;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom)) 18px;
+    gap: 4px;
+  }
+  header, footer { text-align: center; z-index: 2; }
+
+  h1 {
+    font-family: Cinzel, Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(1.15rem, 5.6vw, 1.7rem);
+    letter-spacing: 0.14em;
+    color: var(--gold-bright);
+    text-shadow: 0 0 18px rgba(212, 175, 106, 0.35);
+  }
+  h1 .star { color: var(--gold); font-size: 0.75em; vertical-align: 0.12em; }
+  .subtitle {
+    font-style: italic;
+    font-size: clamp(0.95rem, 4vw, 1.15rem);
+    color: var(--ink-dim);
+    letter-spacing: 0.06em;
+  }
+
+  .dial-wrap { position: relative; min-height: 0; min-width: 0; }
+  .dial-wrap svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  /* ── Cartouche (phase info) ───────────────────────── */
+  .cartouche {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 6px 10px 2px;
+  }
+  .portrait-moon { width: 56px; height: 56px; flex: none; filter: drop-shadow(0 0 6px rgba(240, 212, 154, 0.25)); }
+  .phase-text { text-align: left; }
+  .phase-name {
+    font-family: Cinzel, Georgia, serif;
+    font-size: clamp(1.02rem, 4.6vw, 1.3rem);
+    color: var(--gold-bright);
+    letter-spacing: 0.08em;
+  }
+  .phase-detail {
+    font-size: clamp(0.86rem, 3.6vw, 1rem);
+    color: var(--ink-dim);
+    font-style: italic;
+    line-height: 1.35;
+  }
+  .credits {
+    margin-top: 4px;
+    font-family: Cinzel, Georgia, serif;
+    font-size: clamp(0.66rem, 2.8vw, 0.78rem);
+    letter-spacing: 0.18em;
+    color: var(--gold);
+    opacity: 0.85;
+    text-transform: uppercase;
+  }
+  .source {
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    color: var(--ink-dim);
+    opacity: 0.6;
+    font-style: italic;
+    margin-top: 2px;
+  }
+
+  /* ── Landscape: the plot stays put, only the texts turn ── */
+  @media (orientation: landscape) {
+    .card {
+      grid-template-rows: 1fr;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+    }
+    .dial-wrap { align-self: stretch; }
+    header { writing-mode: vertical-rl; transform: rotate(180deg); justify-self: start; }
+    footer { writing-mode: vertical-rl; justify-self: end; }
+    .cartouche { flex-direction: column; gap: 10px; }
+    .phase-text { text-align: left; }
+    .portrait-moon { width: 48px; height: 48px; }
+    .source { display: none; }
+  }
+
+  /* ── Animations ───────────────────────────────────── */
+  @keyframes twinkle { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+  .tw { animation: twinkle 3.4s ease-in-out infinite; }
+  @keyframes breathe { 0%, 100% { opacity: 0.5; } 50% { opacity: 0.9; } }
+  .sun-halo { animation: breathe 7s ease-in-out infinite; }
+</style>
+</head>
+<body>
+
+<div class="frame" aria-hidden="true">
+  <div class="corner tl"><svg viewBox="0 0 34 34" fill="none" stroke="currentColor" stroke-width="1.4">
+    <path d="M2 32 V10 Q2 2 10 2 H32" /><path d="M8 32 V14 Q8 8 14 8 H32" opacity="0.6"/>
+    <circle cx="8" cy="8" r="2.2" fill="currentColor" stroke="none"/>
+  </svg></div>
+  <div class="corner tr"><svg viewBox="0 0 34 34" fill="none" stroke="currentColor" stroke-width="1.4">
+    <path d="M2 32 V10 Q2 2 10 2 H32" /><path d="M8 32 V14 Q8 8 14 8 H32" opacity="0.6"/>
+    <circle cx="8" cy="8" r="2.2" fill="currentColor" stroke="none"/>
+  </svg></div>
+  <div class="corner bl"><svg viewBox="0 0 34 34" fill="none" stroke="currentColor" stroke-width="1.4">
+    <path d="M2 32 V10 Q2 2 10 2 H32" /><path d="M8 32 V14 Q8 8 14 8 H32" opacity="0.6"/>
+    <circle cx="8" cy="8" r="2.2" fill="currentColor" stroke="none"/>
+  </svg></div>
+  <div class="corner br"><svg viewBox="0 0 34 34" fill="none" stroke="currentColor" stroke-width="1.4">
+    <path d="M2 32 V10 Q2 2 10 2 H32" /><path d="M8 32 V14 Q8 8 14 8 H32" opacity="0.6"/>
+    <circle cx="8" cy="8" r="2.2" fill="currentColor" stroke="none"/>
+  </svg></div>
+</div>
+
+<div class="card">
+  <header>
+    <h1><span class="star">✦</span> EL RELOJ LUNAR <span class="star">✦</span></h1>
+    <div class="subtitle">de Lala Meteora</div>
+  </header>
+
+  <div class="dial-wrap">
+    <svg id="dial" viewBox="0 0 1000 1000" role="img" aria-label="Reloj de fases lunares">
+      <defs>
+        <radialGradient id="gSunCore" cx="50%" cy="42%" r="60%">
+          <stop offset="0%" stop-color="#fdf3d0"/>
+          <stop offset="55%" stop-color="#f0d49a"/>
+          <stop offset="100%" stop-color="#c99b4e"/>
+        </radialGradient>
+        <radialGradient id="gSunHalo">
+          <stop offset="0%" stop-color="#f0d49a" stop-opacity="0.5"/>
+          <stop offset="100%" stop-color="#f0d49a" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="gIce">
+          <stop offset="0%" stop-color="#dfe8ea" stop-opacity="0.9"/>
+          <stop offset="70%" stop-color="#cfdce2" stop-opacity="0.55"/>
+          <stop offset="100%" stop-color="#cfdce2" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="gOcean" cx="50%" cy="42%" r="65%">
+          <stop offset="0%" stop-color="#1d4266"/>
+          <stop offset="70%" stop-color="#122c48"/>
+          <stop offset="100%" stop-color="#0b1d33"/>
+        </radialGradient>
+        <!-- Night falls on the half of Earth facing away from the Sun (bottom) -->
+        <linearGradient id="gNight" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stop-color="#05040f" stop-opacity="0"/>
+          <stop offset="44%" stop-color="#05040f" stop-opacity="0"/>
+          <stop offset="56%" stop-color="#05040f" stop-opacity="0.72"/>
+          <stop offset="100%" stop-color="#05040f" stop-opacity="0.88"/>
+        </linearGradient>
+        <!-- The Moon: the side facing the Sun (top) is bright, the far side dark -->
+        <linearGradient id="gMoonHalf" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stop-color="#f5edd8"/>
+          <stop offset="46%" stop-color="#e9dfc4"/>
+          <stop offset="54%" stop-color="#332b4d"/>
+          <stop offset="100%" stop-color="#221c3a"/>
+        </linearGradient>
+        <radialGradient id="gMoonGlow">
+          <stop offset="0%" stop-color="#f5edd8" stop-opacity="0.35"/>
+          <stop offset="100%" stop-color="#f5edd8" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="3"/>
+        </filter>
+        <clipPath id="clipEarth"><circle cx="500" cy="500" r="110"/></clipPath>
+        <path id="rimTextPath" d="M 140 500 A 360 360 0 0 0 860 500" fill="none"/>
+      </defs>
+
+      <!-- starfield (populated by script) -->
+      <g id="stars"></g>
+
+      <!-- rim -->
+      <circle cx="500" cy="500" r="470" fill="none" stroke="var(--gold-dim)" stroke-width="1.2" opacity="0.8"/>
+      <circle cx="500" cy="500" r="452" fill="none" stroke="var(--gold)" stroke-width="2" opacity="0.9"/>
+      <circle cx="500" cy="500" r="444" fill="none" stroke="var(--gold-dim)" stroke-width="0.8" opacity="0.5"/>
+
+      <text font-family="Cinzel, Georgia, serif" font-size="25" letter-spacing="11" fill="var(--gold)" opacity="0.8">
+        <textPath href="#rimTextPath" startOffset="50%" text-anchor="middle">✦ LA LVNA · XVIII ✦</textPath>
+      </text>
+
+      <!-- 28 day ticks -->
+      <g id="ticks"></g>
+
+      <!-- the eight phases, engraved around the ring (populated by script) -->
+      <g id="medallions"></g>
+
+      <!-- the moon's orbit -->
+      <circle cx="500" cy="500" r="270" fill="none" stroke="var(--gold)" stroke-width="1"
+              stroke-dasharray="2 9" opacity="0.45"/>
+
+      <!-- ── THE SUN · fixed at the top, one hand of the clock ── -->
+      <g id="sunHand">
+        <line x1="500" y1="478" x2="500" y2="215" stroke="var(--gold)" stroke-width="2.5" opacity="0.9"/>
+        <path d="M 500 300 L 508 316 L 500 332 L 492 316 Z" fill="var(--gold)"/>
+      </g>
+      <g id="sun">
+        <circle class="sun-halo" cx="500" cy="118" r="86" fill="url(#gSunHalo)"/>
+        <g id="sunRays" stroke="var(--gold)" fill="var(--gold)"></g>
+        <circle cx="500" cy="118" r="44" fill="url(#gSunCore)" stroke="var(--gold-bright)" stroke-width="1.5"/>
+        <!-- a serene tarot face -->
+        <g stroke="#8a6b34" stroke-width="2" fill="none" stroke-linecap="round">
+          <path d="M 484 112 q 5 -5 10 0"/>
+          <path d="M 506 112 q 5 -5 10 0"/>
+          <path d="M 492 130 q 8 7 16 0"/>
+        </g>
+      </g>
+
+      <!-- ── THE EARTH · the Arctic at the heart of the card ── -->
+      <g id="earth">
+        <circle cx="500" cy="500" r="110" fill="url(#gOcean)"/>
+        <g id="earthTex" clip-path="url(#clipEarth)">
+          <!-- engraved graticule: 60°N and 30°N parallels, meridians every 45° -->
+          <g stroke="var(--gold)" stroke-width="0.7" fill="none" opacity="0.28">
+            <circle cx="500" cy="500" r="55"/>
+            <circle cx="500" cy="500" r="95"/>
+            <line x1="500" y1="390" x2="500" y2="610"/>
+            <line x1="390" y1="500" x2="610" y2="500"/>
+            <line x1="422" y1="422" x2="578" y2="578"/>
+            <line x1="578" y1="422" x2="422" y2="578"/>
+          </g>
+          <!-- true coastlines: Natural Earth 110m, orthographic from above the
+               North Pole (Greenwich up at 12:00 UTC) — see tools/build-earth.mjs -->
+          <path fill="#3d5a42" fill-rule="evenodd" stroke="var(--gold)" stroke-width="0.7" stroke-opacity="0.45"
+                d="M410 563L409 562L408 561L407 559L406 557L405 555L406 557L406 557L408 560L407 559L406 557L407 559L408 560L407 559L406 558L406 556L405 556L404 554L404 553L404 554L405 555L406 556L406 558L408 560L409 562L410 563ZM414 569L413 568L413 567L413 568L414 569ZM394 530L394 528L393 526L393 524L392 522L392 519L391 518L391 516L391 515L391 514L391 512L391 510L391 511L391 514L391 516L392 517L392 518L392 520L392 522L393 524L393 525L393 526L393 527L394 530ZM403 551L404 553L403 551L402 549L401 548L400 546L399 544L398 541L397 540L397 538L396 537L396 536L396 537L397 538L397 540L398 541L399 543L400 544L400 546L401 547L402 548L403 550L403 551L404 552L404 553L404 552L403 551L402 550L403 552ZM412 565L412 564L410 562L409 560L408 559L407 558L409 559L409 560L410 562L412 563L412 564ZM392 483L392 482L393 481L393 483L392 484L392 483ZM595 447L595 449L595 448ZM410 560L409 560L408 558L409 559L410 560L411 560ZM405 552L403 550L405 552L405 552L406 553L405 553L405 552ZM409 557L409 558L410 559L408 557ZM412 562L411 562L411 561L412 562L411 560L412 562ZM409 556L408 555L408 554L408 555ZM411 554L411 555L411 557L410 556L410 557L411 560L410 559L410 558L409 557L408 555L408 554L408 553L410 553L411 554ZM595 457L596 458L596 459L595 458L595 457ZM602 476L602 478L602 479L602 478L602 476L602 475L602 476ZM599 469L598 468L598 466L597 465L597 463L597 461L598 463L598 464L599 465L599 467L600 468L600 470L601 472L600 470L600 469L599 470L599 469ZM402 536L401 535L401 533L402 534L403 536L403 537L402 536ZM543 595L542 595L543 594L544 594L543 595ZM542 594L541 594L542 594ZM540 594L540 595L540 594ZM539 595L538 595L539 595ZM600 482L600 479L600 477L600 476L599 474L599 473L599 472L600 473L600 474L600 476L601 478L600 477L601 479L600 480L601 481L601 483L601 486L601 487L601 488L602 489L602 491L601 490L601 488L600 487L600 485L600 484L600 482ZM598 478L598 480L597 479L598 478ZM413 552L412 551L414 551L415 552L413 552ZM596 479L597 481L596 479ZM596 478L596 479L596 478ZM435 564L434 564L433 563L432 562L433 562L435 563L435 564ZM449 426L450 425L451 424L452 424L451 425L450 425L449 426ZM464 418L462 419L461 419L462 418L464 418ZM477 417L477 416L478 415L481 415L479 416L478 416L477 417ZM487 418L486 418L486 416L487 415L488 417L487 418ZM445 568L444 568L442 569L441 568L439 566L436 566L436 565L434 562L432 561L431 560L432 562L430 562L429 561L429 560L429 559L430 559L431 560L433 560L434 561L436 563L437 564L440 564L440 565L443 565L445 565L446 564L447 564L448 564L448 566L446 567L445 568ZM486 420L487 419L488 419L487 421L486 420ZM454 564L454 565L455 565L455 566L453 565L451 565L450 563L448 564L447 563L448 562L449 562L450 562L452 561L453 561L453 563L454 564ZM568 466L567 464L568 465L568 467ZM563 466L564 468L564 470L563 468L563 466ZM561 540L559 542L557 543L556 544L555 543L556 542L557 541L559 541L560 540ZM558 461L559 461L558 460L559 459L558 457L559 457L559 456L560 455L561 456L560 456L562 457L562 459L562 460L564 462L563 462L561 462L559 462L558 462L557 462L558 461ZM547 544L548 543L549 544L551 544L549 545L548 545L547 544ZM459 556L458 559L457 557L455 559L455 561L454 560L453 560L454 559L455 558L455 557L456 556L458 555L458 553L459 552L461 552L460 553L459 555L459 556ZM508 433L510 433L512 433L511 434L511 436L509 437L508 438L506 437L507 436L507 434L508 433ZM486 439L487 438L488 439L487 440ZM527 553L526 554L525 553L526 553L527 552L527 553ZM503 443L504 441L503 441L502 441L502 440L503 439L502 438L501 436L500 434L498 433L499 432L499 430L501 430L503 430L504 430L506 430L506 430L505 431L504 432L506 432L505 433L506 434L505 435L504 435L504 436L505 437L505 438L506 439L506 442L505 443L503 443ZM514 553L513 554L513 553ZM550 490L551 491L550 491ZM550 493L551 494L550 494L550 493ZM507 548L508 548L510 548L508 549L507 549ZM545 496L546 495L547 494L547 493L548 492L548 494L549 495L550 496L549 496L549 498L548 497L547 497L545 497ZM511 457L511 456L511 455L512 454L515 454L517 454L519 455L518 456L519 457L517 457L519 459L518 459L517 459L516 458L514 458L514 457L512 458L511 457ZM541 490L541 491L540 491L540 489L541 489ZM504 544L506 543L508 544L507 545L506 545L506 547L505 547L503 547L502 546L501 545L500 547L500 539L502 541L504 542L504 544ZM539 504L539 505L538 507L537 505L538 504L539 504ZM500 536L500 535L500 536ZM501 536L500 535L501 535ZM539 500L540 500L539 499L540 499L541 499L543 498L541 497L540 497L538 497L538 495L539 494L541 494L541 494L544 495L544 496L545 497L546 498L548 499L548 500L550 501L550 502L552 503L553 504L555 504L557 505L557 503L558 503L560 502L559 501L560 499L561 498L561 497L562 496L562 495L562 493L562 492L564 492L565 491L567 490L568 488L567 487L566 487L563 488L563 489L562 487L560 486L559 486L558 486L557 487L556 489L554 488L553 489L550 489L550 487L549 486L549 485L550 484L550 481L551 481L553 480L554 478L552 477L550 477L550 475L551 473L553 471L554 471L554 470L554 468L554 466L554 465L554 463L556 462L557 462L558 463L559 464L561 465L562 467L563 469L564 471L564 472L566 472L567 474L569 475L571 476L571 475L568 473L566 471L565 470L565 468L567 469L568 468L569 467L569 465L567 463L565 463L566 463L568 463L570 465L571 466L572 467L573 468L572 468L570 467L571 469L571 470L573 471L574 472L575 473L576 473L577 473L579 474L579 476L580 477L579 475L580 476L581 477L583 478L582 479L583 478L584 478L585 479L584 479L583 480L584 480L585 479L587 478L588 479L588 480L589 481L590 483L591 484L592 485L594 486L595 485L596 484L597 483L598 483L598 485L598 486L597 487L597 488L595 488L595 490L595 492L595 493L595 494L595 496L595 497L595 499L596 499L596 500L596 501L596 503L596 504L595 505L595 506L595 508L596 509L596 511L597 512L597 513L599 513L600 514L602 513L603 512L604 511L604 509L604 506L604 505L604 504L604 503L604 501L603 501L603 499L602 497L602 496L602 495L603 495L604 496L605 497L606 498L606 497L606 496L606 494L606 493L605 492L605 490L605 489L605 487L606 488L607 488L608 486L608 485L607 483L607 481L606 479L606 478L606 476L605 474L605 473L604 472L604 471L603 469L603 468L602 466L602 465L603 467L603 465L601 463L601 462L601 461L600 460L600 458L599 456L599 455L598 454L598 453L596 451L595 449L596 450L595 448L595 447L594 446L593 444L593 443L592 441L591 439L590 437L588 436L587 434L586 432L585 431L585 430L584 429L585 430L583 427L582 426L580 424L578 422L576 420L573 418L571 416L568 414L567 412L565 412L564 411L563 410L564 411L566 412L567 413L568 414L569 414L570 415L572 417L573 418L575 420L577 422L578 423L580 424L581 426L582 427L584 429L585 430L586 432L587 433L588 434L590 437L591 438L591 439L592 440L593 441L594 442L592 440L593 441L595 444L596 447L597 449L599 451L599 453L599 451L599 452L600 454L601 456L601 458L601 456L600 455L601 457L602 458L603 460L602 459L603 461L604 464L604 465L605 467L606 469L606 471L606 472L606 470L607 473L606 471L605 468L605 467L605 469L606 470L606 469L605 467L605 466L604 464L603 463L604 465L605 469L606 472L607 473L607 475L608 477L608 479L608 480L609 482L609 483L608 481L608 480L608 482L609 483L608 482L608 480L608 479L607 477L607 476L607 477L607 478L607 479L607 481L607 482L608 483L608 484L608 486L608 487L608 488L608 489L608 491L608 492L607 493L607 495L607 496L607 497L607 499L607 500L607 501L607 502L606 504L606 506L605 509L605 510L605 511L605 513L605 515L604 516L604 518L603 520L603 521L602 523L602 524L600 527L599 528L599 527L597 528L596 529L595 531L594 533L592 533L592 534L591 535L590 536L589 536L588 537L587 537L586 538L585 539L586 540L588 538L589 538L590 537L591 536L593 536L594 535L595 534L595 535L594 536L593 537L592 537L591 538L590 539L589 541L588 541L588 540L587 540L586 541L585 542L584 542L583 542L581 543L580 544L579 545L578 546L576 547L574 547L571 547L570 547L569 547L569 547L568 546L567 546L566 545L564 543L562 542L561 542L562 540L563 540L562 539L561 539L558 540L557 541L555 542L554 542L552 542L551 541L549 542L547 541L546 542L545 541L543 541L542 540L540 542L539 543L536 543L533 544L532 544L530 545L529 545L528 546L529 547L528 548L528 549L527 550L526 547L526 546L525 547L525 549L525 550L526 551L525 552L525 553L524 554L523 556L522 558L520 559L519 560L519 561L517 562L518 561L518 560L519 559L520 558L522 556L522 555L522 553L522 552L521 553L520 553L518 554L517 553L517 552L515 553L514 553L513 551L513 551L513 550L513 549L514 548L515 547L516 546L515 545L514 545L512 546L511 546L509 544L510 543L512 542L512 543L514 542L513 541L512 541L511 540L510 540L509 539L509 538L511 538L511 537L511 535L513 534L514 532L515 532L517 532L518 532L520 531L521 531L522 530L523 530L525 529L527 529L527 528L528 526L528 525L529 524L529 523L531 523L531 521L532 522L532 520L534 519L535 518L536 517L537 516L537 518L538 517L539 515L540 514L539 513L538 513L538 512L539 511L540 510L541 508L541 507L541 506L540 506L541 504L542 505L541 504L539 503L538 504L537 504L535 504L534 503L535 502L537 501L538 502L539 500ZM529 513L530 512L531 512L530 511L533 511L530 510L531 509L533 509L535 509L536 508L537 507L538 508L539 509L538 510L538 511L538 513L537 515L536 516L535 517L533 517L534 516L534 514L533 515L533 516L532 517L532 516L530 517L529 516L529 513ZM530 508L531 509L530 509L530 508ZM531 492L532 493L531 495L530 494L531 492ZM532 498L533 498L531 497L531 496L532 495L533 495L533 494L532 492L533 491L533 489L534 488L534 487L536 485L537 486L538 484L538 482L539 481L538 480L539 479L542 480L542 481L540 483L541 483L542 483L543 482L543 481L545 479L546 479L546 480L545 482L546 481L547 479L548 482L547 484L547 485L546 486L545 488L547 490L545 490L545 489L544 487L542 488L541 487L539 488L539 489L539 491L537 492L537 493L538 494L538 497L537 498L537 499L535 499L534 500L532 500L531 498L532 498ZM530 506L531 504L532 505L533 504L534 504L535 505L534 506L532 507L532 506L531 506L530 506ZM481 526L480 524L481 524L481 525ZM533 502L534 503L532 503L530 503L530 501L531 500L532 501ZM530 518L530 520L528 520L526 518L526 517L524 517L525 515L527 514L528 513L529 516L530 517ZM486 525L485 524L484 523L485 524L486 525ZM528 502L529 503L528 503L528 502ZM484 522L483 523L482 522L481 520L482 520L484 521L484 522ZM525 504L527 504L528 504L528 505L527 505L525 506L525 504ZM525 508L526 507L527 508L527 510L527 511L527 512L526 510L525 513L524 512L524 510L526 510L524 509L525 508ZM469 481L471 479L473 478L473 480L475 482L476 484L477 485L477 487L477 489L477 490L476 491L476 488L475 487L475 484L474 483L473 481L471 480L469 481ZM524 502L525 501L526 500L527 500L528 498L527 497L527 495L529 495L529 497L529 498L530 499L529 501L528 501L526 502L525 503L524 502ZM521 510L522 511L523 512L523 513L522 514L521 513L521 512L521 510ZM476 507L476 509L476 510L475 511L472 510L472 512L471 513L472 513L473 515L473 518L474 517L475 518L475 520L474 521L473 523L473 524L475 523L475 524L476 525L476 526L477 527L478 525L479 525L483 529L483 530L484 532L486 533L487 534L487 536L488 536L489 537L491 537L492 538L493 539L494 539L493 538L496 538L497 538L499 539L500 539L500 547L499 547L498 547L499 548L499 549L500 551L498 551L495 552L493 553L491 554L490 553L487 554L486 554L484 553L484 554L482 555L483 556L482 559L480 559L478 560L477 562L476 562L475 563L473 564L473 562L473 560L474 557L475 555L477 555L479 554L481 553L483 552L485 551L486 549L485 549L484 550L482 551L482 549L479 548L476 550L476 551L474 551L473 550L473 549L472 548L471 548L468 546L465 545L461 545L455 545L456 546L456 547L457 548L458 548L459 549L459 552L458 553L456 553L455 555L453 556L450 556L449 557L447 557L445 556L443 556L442 556L441 554L439 553L437 553L436 553L435 553L434 552L432 552L433 553L432 555L431 557L429 556L428 555L427 554L428 553L429 552L430 553L430 551L429 550L430 549L431 549L430 548L429 546L428 545L427 544L428 544L429 545L429 544L428 543L427 542L426 541L425 540L424 541L424 542L424 543L425 544L426 546L426 547L424 546L422 544L421 544L422 546L421 547L421 548L421 549L419 549L419 551L418 551L416 550L414 549L412 548L410 546L409 544L408 543L407 542L406 540L405 538L404 536L403 535L403 532L401 530L400 528L400 530L399 531L400 533L400 534L399 535L398 534L397 532L396 531L395 528L395 527L395 525L395 523L395 522L395 520L395 519L393 518L393 519L393 521L393 522L393 523L393 525L393 526L393 527L393 526L393 524L392 522L392 520L392 519L392 518L392 517L392 516L393 516L394 515L395 514L395 512L395 510L395 509L395 508L396 508L396 506L397 504L398 503L399 501L398 500L398 498L398 497L398 495L397 494L397 491L396 489L396 488L396 486L396 483L395 482L394 482L393 481L394 479L394 478L394 476L394 475L395 473L396 472L397 471L399 470L400 470L402 470L403 467L403 466L405 464L406 463L407 461L409 460L410 457L411 455L412 452L414 450L415 448L417 447L418 447L419 445L420 443L421 442L423 441L424 439L425 439L427 439L428 438L429 436L428 436L427 436L426 436L425 437L423 437L423 438L422 438L422 438L420 439L419 440L419 441L419 442L418 444L418 445L417 445L415 446L414 447L414 448L413 448L412 447L413 445L412 445L413 444L413 443L414 441L414 439L415 439L415 437L416 436L417 433L419 431L420 430L421 428L421 428L422 427L423 425L424 424L425 423L426 422L428 422L429 423L430 422L431 422L433 421L435 421L437 421L439 420L440 421L442 421L443 421L444 421L445 421L445 420L446 419L447 419L449 419L448 419L446 419L445 418L443 418L441 418L439 418L438 418L437 417L435 418L434 418L432 419L430 420L429 420L428 421L427 422L425 422L424 423L423 424L421 426L420 427L419 428L419 429L418 430L417 432L416 431L417 429L418 428L419 426L420 424L422 423L424 421L425 420L426 418L428 417L429 416L430 415L431 414L430 415L429 416L430 415L431 414L433 413L435 411L437 410L438 409L440 408L441 407L442 406L444 406L445 405L447 404L448 403L449 402L451 401L452 401L453 400L456 399L457 399L460 398L461 397L462 397L464 396L465 396L467 395L469 394L470 394L472 394L473 393L474 393L476 393L478 392L476 393L475 393L476 393L477 392L479 392L481 392L482 391L483 391L482 392L483 392L486 391L487 391L489 391L490 391L492 391L493 391L495 391L496 391L498 391L501 390L502 390L504 390L505 391L508 391L509 391L511 391L512 391L514 391L517 392L519 392L520 393L522 393L523 393L524 394L526 395L527 395L528 396L529 396L530 397L531 397L532 399L530 399L529 399L529 400L529 401L530 402L528 403L527 403L525 404L525 404L523 404L522 405L520 405L518 405L516 406L516 407L515 408L514 409L512 409L511 410L510 411L508 411L507 411L506 411L504 410L502 411L500 411L499 411L498 412L495 412L493 412L490 413L489 413L487 413L486 414L484 414L483 414L484 413L483 411L484 411L483 410L482 410L480 410L478 410L476 410L475 410L473 410L471 410L469 410L468 411L468 413L467 414L466 414L464 415L463 415L461 415L458 416L457 417L455 417L453 418L452 420L451 420L449 421L448 422L447 423L447 424L447 426L447 427L447 428L449 428L450 428L450 426L452 425L454 425L455 424L456 423L458 423L459 422L460 422L462 423L461 424L463 424L462 426L460 427L460 428L457 429L456 431L455 432L453 433L450 434L448 435L447 436L446 437L445 438L446 439L448 439L451 439L452 438L454 438L453 439L453 440L453 442L454 441L454 440L456 439L456 438L455 437L454 438L455 436L456 435L457 435L458 435L458 436L460 435L461 435L462 433L462 432L462 430L462 428L461 427L460 428L462 426L463 425L464 425L466 424L465 423L467 423L468 423L467 422L466 421L465 420L466 420L465 419L466 418L467 418L468 419L470 420L471 420L472 421L473 422L474 423L476 423L478 423L479 424L480 425L481 424L482 425L484 425L483 423L481 423L480 422L479 421L478 421L476 421L475 421L474 420L476 420L476 419L475 419L475 418L476 417L476 418L478 419L479 419L480 420L482 419L483 420L484 420L485 421L486 422L488 422L489 421L491 420L494 420L496 420L496 418L497 417L499 417L500 416L500 415L501 414L502 413L503 412L505 412L507 412L508 412L509 412L510 413L511 413L513 413L513 415L514 415L513 416L513 418L513 419L513 420L511 421L509 421L508 421L506 420L505 420L503 420L502 421L502 424L503 425L504 426L506 427L506 428L504 428L502 427L502 429L501 428L498 430L498 431L497 431L496 431L495 434L493 435L492 435L491 435L490 436L491 438L491 440L491 441L490 442L489 441L489 440L490 439L489 437L488 437L487 437L485 437L484 438L482 439L481 440L480 440L478 440L477 441L478 443L478 444L478 445L478 446L476 445L476 447L477 447L477 449L476 450L475 450L474 451L473 452L475 452L476 451L477 450L479 449L479 450L480 450L481 452L482 453L482 454L481 455L480 458L481 459L482 459L483 458L483 457L483 456L483 454L485 452L484 450L483 449L482 448L483 446L483 445L483 443L483 441L485 441L485 439L486 439L487 440L488 442L489 444L490 445L492 443L493 442L494 443L495 445L496 449L495 450L493 451L491 453L490 456L489 460L489 461L488 464L486 465L485 466L485 467L484 468L483 469L481 469L480 467L478 468L477 468L473 468L472 468L471 467L472 466L472 465L476 464L474 463L473 461L472 461L472 462L470 464L471 465L471 467L469 468L470 469L471 469L471 470L472 471L471 472L470 471L469 470L468 471L469 472L468 474L468 477L467 476L467 477L466 478L466 479L465 480L465 481L467 481L466 483L465 483L462 485L463 486L464 485L464 485L467 486L468 488L470 488L469 490L468 490L467 489L465 489L462 488L461 489L460 488L458 486L458 487L459 488L460 489L461 489L462 490L463 489L465 490L467 490L467 491L469 491L468 492L466 491L467 492L467 493L467 494L466 495L468 495L469 495L470 496L469 497L470 498L471 498L472 499L473 500L473 501L474 503L475 504L475 505L477 506L476 506L476 507ZM438 446L436 446L435 446L436 445L435 444L435 443L433 444L432 444L430 446L429 448L430 449L431 450L432 449L433 449L434 450L433 451L432 452L433 452L435 451L436 451L437 450L439 450L440 450L439 451L439 453L438 453L439 454L441 454L442 453L442 451L443 450L442 449L443 448L443 446L441 446L439 446L438 446ZM524 502L523 503L524 502ZM522 508L521 509L521 508ZM490 479L491 478L492 479L491 480L490 479ZM520 507L520 508L520 507ZM523 502L522 503L522 502ZM522 504L522 505L520 506L521 504ZM478 506L477 504L480 504L479 506ZM494 481L492 480L493 479L493 478L493 476L494 477L495 478L496 479L496 481L496 481L494 482ZM492 483L491 482L492 481L493 481L494 482L494 483L492 483ZM486 489L486 488L487 487L487 488L486 489ZM479 504L479 502L481 501L483 501L482 502L481 503L479 504ZM520 499L521 499L522 500L522 501L521 501L520 502L518 502L517 501L518 500L518 499L520 499ZM512 495L512 494L513 493L514 493L515 494L516 493L518 494L519 494L520 495L521 494L523 495L524 496L525 495L526 496L526 497L526 498L526 500L524 499L523 499L524 498L522 499L521 499L520 498L519 499L519 498L518 499L517 500L516 500L515 499L514 498L513 497L512 496ZM506 489L505 487L507 487L508 487L507 487L507 486L507 484L506 485L504 485L504 484L505 483L506 482L507 481L507 480L508 478L508 477L509 476L509 475L509 474L510 472L511 472L511 471L513 471L512 470L514 470L513 469L513 468L513 466L515 466L515 468L515 467L517 467L515 466L516 465L519 464L521 465L523 465L524 464L527 464L528 465L529 465L530 465L531 464L532 463L534 463L535 462L536 461L538 460L539 461L539 463L540 464L540 466L539 467L538 470L538 471L537 472L536 474L535 474L532 476L531 475L529 476L531 476L531 478L530 479L529 478L529 477L528 479L529 480L527 481L526 483L524 484L523 486L523 487L524 489L525 490L523 492L523 491L522 492L522 493L520 493L518 492L518 493L515 493L514 493L513 492L512 491L511 491L511 489L510 490L509 491L508 490L506 489Z"/>
+          <!-- polar sea ice -->
+          <circle cx="500" cy="500" r="30" fill="url(#gIce)"/>
+        </g>
+        <!-- night side: away from the Sun -->
+        <circle cx="500" cy="500" r="110" fill="url(#gNight)"/>
+        <circle cx="500" cy="500" r="110" fill="none" stroke="var(--gold)" stroke-width="1.6" opacity="0.85"/>
+        <!-- the axis of the world -->
+        <circle cx="500" cy="500" r="4.5" fill="var(--gold-bright)"/>
+      </g>
+
+      <!-- ── THE MOON · the turning hand ── -->
+      <g id="moonHand">
+        <line x1="500" y1="380" x2="500" y2="248" stroke="var(--gold)" stroke-width="2" opacity="0.85"/>
+        <path d="M 500 340 L 507 354 L 500 368 L 493 354 Z" fill="var(--gold)"/>
+      </g>
+      <g id="moon">
+        <circle id="moonGlow" r="66" fill="url(#gMoonGlow)"/>
+        <circle id="moonDisc" r="38" fill="url(#gMoonHalf)" stroke="var(--gold)" stroke-width="1.3"/>
+        <!-- craters, faint -->
+        <g fill="#00000022">
+          <circle r="6" cx="-12" cy="-14"/><circle r="4" cx="10" cy="-8"/><circle r="5" cx="2" cy="12"/>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+  <footer>
+    <div class="cartouche">
+      <svg class="portrait-moon" viewBox="-32 -32 64 64" aria-hidden="true">
+        <circle r="28" fill="#221c3a" stroke="var(--gold)" stroke-width="1.2"/>
+        <path id="portraitLit" d="" fill="#f0e6cc"/>
+        <circle r="28" fill="none" stroke="var(--gold)" stroke-width="1.2"/>
+      </svg>
+      <div class="phase-text">
+        <div class="phase-name" id="phaseEs">Consultando a los astros…</div>
+        <div class="phase-detail">
+          <span id="phaseEn"></span><br>
+          <span id="detail"></span><br>
+          <span id="dateLine"></span>
+        </div>
+      </div>
+    </div>
+    <div class="credits">Obra de Inventor Loco ✦ para Lala Meteora</div>
+    <div class="source" id="source"></div>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ── Astronomy ────────────────────────────────────────────
+  var SYNODIC = 29.53058867;                     // days per lunation
+  var EPOCH_NEW = Date.UTC(2000, 0, 6, 18, 14);  // a known new moon
+  var DAY_MS = 86400000;
+
+  // Fraction of the lunar cycle [0..1): 0 = new, 0.5 = full.
+  function localFraction(t) {
+    var d = (t - EPOCH_NEW) / DAY_MS / SYNODIC;
+    return d - Math.floor(d);
+  }
+
+  var PHASES = [
+    { es: "Luna Nueva",        en: "New Moon" },
+    { es: "Luna Creciente",    en: "Waxing Crescent" },
+    { es: "Cuarto Creciente",  en: "First Quarter" },
+    { es: "Gibosa Creciente",  en: "Waxing Gibbous" },
+    { es: "Luna Llena",        en: "Full Moon" },
+    { es: "Gibosa Menguante",  en: "Waning Gibbous" },
+    { es: "Cuarto Menguante",  en: "Last Quarter" },
+    { es: "Luna Menguante",    en: "Waning Crescent" }
+  ];
+  var EN_TO_ES = {};
+  PHASES.forEach(function (p) { EN_TO_ES[p.en] = p.es; });
+  EN_TO_ES["Third Quarter"] = "Cuarto Menguante";
+
+  function phaseIndex(f) { return Math.round(f * 8) % 8; }
+
+  // ── The oracle: wttr.in, with the stars themselves as fallback ──
+  var api = null; // { f, t, nameEn }
+
+  function fromIllumination(ill, waning) {
+    var c = Math.min(1, Math.max(-1, 1 - 2 * ill));
+    var f = Math.acos(c) / (2 * Math.PI);
+    return waning ? 1 - f : f;
+  }
+
+  function consultOracle() {
+    var ctrl = new AbortController();
+    var timer = setTimeout(function () { ctrl.abort(); }, 9000);
+    fetch("https://wttr.in/?format=j1", { signal: ctrl.signal })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        clearTimeout(timer);
+        var astro = d.weather[0].astronomy[0];
+        var name = astro.moon_phase;
+        var ill = parseFloat(astro.moon_illumination) / 100;
+        var waning = /Waning|Last|Third/i.test(name);
+        var now = Date.now();
+        var fApi = fromIllumination(ill, waning);
+        if (/New/i.test(name)) fApi = 0;
+        if (/Full/i.test(name)) fApi = 0.5;
+        var fLoc = localFraction(now);
+        var drift = Math.abs(fApi - fLoc);
+        drift = Math.min(drift, 1 - drift);
+        // The API anchors the hand; if it agrees with the ephemeris
+        // (within ~1 day) keep the smoother local value.
+        api = { f: drift < 0.035 ? fLoc : fApi, t: now, nameEn: name };
+        setSource("fase según wttr.in · " + Math.round(ill * 100) + "% iluminada");
+        render(true);
+      })
+      .catch(function () {
+        clearTimeout(timer);
+        api = null;
+        setSource("fase por cálculo astronómico (sin conexión)");
+        render(true);
+      });
+  }
+
+  function currentFraction(t) {
+    if (api) {
+      var f = api.f + (t - api.t) / DAY_MS / SYNODIC;
+      return f - Math.floor(f);
+    }
+    return localFraction(t);
+  }
+
+  // ── SVG helpers ──────────────────────────────────────────
+  var NS = "http://www.w3.org/2000/svg";
+  function el(name, attrs, parent) {
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function $(id) { return document.getElementById(id); }
+
+  // Point on the dial: fraction f of the cycle, counterclockwise from
+  // the top (the Sun) — the way the Moon truly travels, seen from
+  // above the North Pole.
+  function orbitPoint(f, r) {
+    var a = f * 2 * Math.PI;
+    return { x: 500 - r * Math.sin(a), y: 500 - r * Math.cos(a) };
+  }
+
+  // The lit part of the Moon as seen from Earth (waxing lights the right).
+  function litPath(f, r) {
+    var i = (1 - Math.cos(2 * Math.PI * f)) / 2; // illuminated fraction
+    if (i < 0.015) return "";
+    if (i > 0.985) return "M 0 " + (-r) + " A " + r + " " + r + " 0 1 1 0 " + r +
+                          " A " + r + " " + r + " 0 1 1 0 " + (-r) + " Z";
+    var waxing = f < 0.5;
+    var rx = Math.max(0.6, Math.abs(Math.cos(2 * Math.PI * f)) * r);
+    var bulgeLit = i < 0.5 ? 0 : 1; // crescent: terminator bends toward lit side
+    var outerSweep = waxing ? 1 : 0;
+    var termSweep = waxing ? bulgeLit : 1 - bulgeLit;
+    return "M 0 " + (-r) +
+           " A " + r + " " + r + " 0 0 " + outerSweep + " 0 " + r +
+           " A " + rx + " " + r + " 0 0 " + termSweep + " 0 " + (-r) + " Z";
+  }
+
+  // ── Build the static ornaments ───────────────────────────
+  function buildStars() {
+    var g = $("stars");
+    for (var i = 0; i < 90; i++) {
+      var x = Math.random() * 1000, y = Math.random() * 1000;
+      var dc = Math.hypot(x - 500, y - 500);
+      if (dc < 330 || (y < 220 && Math.abs(x - 500) < 130)) continue; // keep sky clear of earth/orbit/sun
+      var r = Math.random() * 1.6 + 0.5;
+      var s = el("circle", { cx: x, cy: y, r: r, fill: "#e8dcc0", opacity: 0.7, "class": "tw" }, g);
+      s.style.animationDelay = (Math.random() * 4).toFixed(2) + "s";
+      s.style.animationDuration = (2.6 + Math.random() * 3).toFixed(2) + "s";
+    }
+  }
+
+  function buildTicks() {
+    var g = $("ticks");
+    for (var d = 1; d < 28; d++) {   // day 0 is marked by the Sun itself
+      var f = d / 28;
+      var p = orbitPoint(f, 330);
+      var big = d % 7 === 0;
+      el("circle", {
+        cx: p.x, cy: p.y, r: big ? 4 : 2,
+        fill: big ? "var(--gold-bright)" : "var(--gold)",
+        opacity: big ? 0.95 : 0.55
+      }, g);
+    }
+  }
+
+  function buildMedallions() {
+    var g = $("medallions");
+    for (var k = 1; k < 8; k++) {           // the Sun itself marks the new moon
+      var f = k / 8;
+      var p = orbitPoint(f, 405);
+      var m = el("g", { transform: "translate(" + p.x + " " + p.y + ")", "data-k": k }, g);
+      el("circle", { r: 26, fill: "#161232", stroke: "var(--gold-dim)", "stroke-width": 1 }, m);
+      el("path", { d: litPath(f, 21), fill: "#e9dfc4", opacity: 0.9 }, m);
+      el("circle", { r: 21, fill: "none", stroke: "var(--gold)", "stroke-width": 0.8, opacity: 0.7 }, m);
+    }
+  }
+
+  function buildSunRays() {
+    var g = $("sunRays");
+    for (var i = 0; i < 16; i++) {
+      var a = (i / 16) * 2 * Math.PI;
+      var straight = i % 2 === 0;
+      var r1 = 48, r2 = straight ? 76 : 64;
+      var x1 = 500 + r1 * Math.sin(a), y1 = 118 - r1 * Math.cos(a);
+      var x2 = 500 + r2 * Math.sin(a), y2 = 118 - r2 * Math.cos(a);
+      if (straight) {
+        el("line", { x1: x1, y1: y1, x2: x2, y2: y2, "stroke-width": 2.5, "stroke-linecap": "round" }, g);
+      } else {
+        el("circle", { cx: x2, cy: y2, r: 2.4, stroke: "none" }, g);
+      }
+    }
+  }
+
+  // ── Render loop ──────────────────────────────────────────
+  var lastIdx = -1;
+
+  function setSource(txt) { $("source").textContent = txt; }
+
+  function render(force) {
+    var now = new Date();
+    var t = now.getTime();
+    var f = currentFraction(t);
+
+    // The Moon, hand of the clock — one turn per lunation, counterclockwise
+    var deg = f * 360;
+    var p = orbitPoint(f, 270);
+    $("moonHand").setAttribute("transform", "rotate(" + (-deg) + " 500 500)");
+    $("moon").setAttribute("transform", "translate(" + p.x + " " + p.y + ")");
+
+    // The Earth turns on its axis: the meridian facing the Sun is at noon.
+    var utcH = now.getUTCHours() + now.getUTCMinutes() / 60 + now.getUTCSeconds() / 3600;
+    var rot = -((utcH - 12) / 24) * 360;
+    $("earthTex").setAttribute("transform", "rotate(" + rot + " 500 500)");
+
+    // Texts
+    var idx = phaseIndex(f);
+    if (idx !== lastIdx || force) {
+      lastIdx = idx;
+      var es = PHASES[idx].es, en = PHASES[idx].en;
+      if (api && api.nameEn && EN_TO_ES[api.nameEn]) { es = EN_TO_ES[api.nameEn]; en = api.nameEn; }
+      $("phaseEs").textContent = es;
+      $("phaseEn").textContent = en;
+      $("portraitLit").setAttribute("d", litPath(f, 28));
+      // highlight the medallion of the hour
+      var nearest = Math.round(f * 8) % 8;
+      var meds = $("medallions").children;
+      for (var i = 0; i < meds.length; i++) {
+        var mine = +meds[i].getAttribute("data-k") === nearest;
+        meds[i].firstChild.setAttribute("stroke", mine ? "var(--gold-bright)" : "var(--gold-dim)");
+        meds[i].firstChild.setAttribute("stroke-width", mine ? 2.4 : 1);
+      }
+    }
+    var age = f * SYNODIC;
+    var ill = Math.round((1 - Math.cos(2 * Math.PI * f)) / 2 * 100);
+    $("detail").textContent = "Día " + (Math.floor(age) + 1) + " del ciclo · " + ill + "% iluminada";
+    $("dateLine").textContent = now.toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
+  }
+
+  buildStars();
+  buildTicks();
+  buildMedallions();
+  buildSunRays();
+  render(true);
+  consultOracle();
+  // The hands barely move (Earth: 0.25°/min, Moon: 0.5°/h) — repainting
+  // once a minute keeps the big coastline path cheap on a phone.
+  setInterval(render, 60000);
+  setInterval(consultOracle, 6 * 3600 * 1000); // renew the oracle four times a day
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) render(true);       // catch up after sleeping in a pocket
+  });
+})();
+</script>
+</body>
+</html>
