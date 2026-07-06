@@ -552,8 +552,8 @@
     // Earth rotates on its axis: show which parts are in daylight
     var utcH = now.getUTCHours() + now.getUTCMinutes() / 60 + now.getUTCSeconds() / 3600;
     var localH = utcH + (userLongitude / 15);
-    // The Earth texture rotates based on local time, with user's meridian at top
-    var earthRot = -userLongitude - ((localH - 12) / 24) * 360;
+    // The Earth texture rotates to bring user's meridian to top, then shows Earth's rotation
+    var earthRot = userLongitude - ((localH - 12) / 24) * 360;
     var earthRotStr = "rotate(" + earthRot + " 500 500)";
     $("earthTex").setAttribute("transform", earthRotStr);
     $("nightSide").setAttribute("transform", earthRotStr);
