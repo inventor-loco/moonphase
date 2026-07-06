@@ -280,7 +280,7 @@
           <circle cx="500" cy="500" r="30" fill="url(#gIce)"/>
         </g>
         <!-- night side: away from the Sun -->
-        <circle cx="500" cy="500" r="110" fill="url(#gNight)"/>
+        <circle id="nightSide" cx="500" cy="500" r="110" fill="url(#gNight)"/>
         <circle cx="500" cy="500" r="110" fill="none" stroke="var(--gold)" stroke-width="1.6" opacity="0.85"/>
         <!-- the axis of the world -->
         <circle cx="500" cy="500" r="4.5" fill="var(--gold-bright)"/>
@@ -569,7 +569,10 @@
     var localH = utcH + (userLongitude / 15);
     // Rotate so user's meridian is always at top, then show current local rotation
     var earthRot = dialRotation - ((localH - 12) / 24) * 360;
-    $("earthTex").setAttribute("transform", "rotate(" + earthRot + " 500 500)");
+    var earthRotStr = "rotate(" + earthRot + " 500 500)";
+    $("earthTex").setAttribute("transform", earthRotStr);
+    // Also rotate the night side so it stays aligned with Earth's rotation
+    $("nightSide").setAttribute("transform", earthRotStr);
 
     // Texts
     var idx = phaseIndex(f);
