@@ -552,9 +552,15 @@
     var p = orbitPoint(f, 270);
     var moonHandRot = dialRotation - deg;
     $("moonHand").setAttribute("transform", "rotate(" + moonHandRot + " 500 500)");
-    // Moon is both translated and rotated with the dial
-    var moonRot = "rotate(" + dialRotation + " 500 500) translate(" + (p.x - 500) + " " + (p.y - 500) + ")";
-    $("moon").setAttribute("transform", moonRot);
+    // Rotate moon's position around the dial center by dialRotation
+    var angle = dialRotation * Math.PI / 180;
+    var dx = p.x - 500;
+    var dy = p.y - 500;
+    var rotatedDx = dx * Math.cos(angle) - dy * Math.sin(angle);
+    var rotatedDy = dx * Math.sin(angle) + dy * Math.cos(angle);
+    var moonX = 500 + rotatedDx;
+    var moonY = 500 + rotatedDy;
+    $("moon").setAttribute("transform", "translate(" + moonX + " " + moonY + ")");
 
     // The Earth turns on its axis: the meridian at the user's location appears at the top.
     // The user's local noon (when their meridian faces the Sun) is when their spade is at the top.
