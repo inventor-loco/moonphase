@@ -562,7 +562,10 @@
     // At local noon, Sun points to top (user's location)
     // As hours pass, Sun rotates clockwise (westward)
     var sunAngle = ((localH - 12) / 24) * 360;
-    $("sunHand").setAttribute("transform", "rotate(" + sunAngle + " 500 500)");
+    var sunHandElem = $("sunHand");
+    if (sunHandElem) {
+      sunHandElem.setAttribute("transform", "rotate(" + sunAngle + " 500 500)");
+    }
 
     // Texts
     var idx = phaseIndex(f);
@@ -594,9 +597,9 @@
   buildSunRays();
   updateDialForLocation();
   consultOracle();
-  // The hands barely move (Earth: 0.25°/min, Moon: 0.5°/h) — repainting
-  // once a minute keeps the big coastline path cheap on a phone.
-  setInterval(render, 60000);
+  // With the Sun hand now showing time of day, update more frequently.
+  // Sun rotates 15°/hour = 0.25°/minute = 0.0042°/second
+  setInterval(render, 1000); // Update every second to show Sun's smooth rotation
   setInterval(consultOracle, 6 * 3600 * 1000); // renew the oracle four times a day
   document.addEventListener("visibilitychange", function () {
     if (!document.hidden) render(true);       // catch up after sleeping in a pocket
