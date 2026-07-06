@@ -280,7 +280,7 @@
           <circle cx="500" cy="500" r="30" fill="url(#gIce)"/>
         </g>
         <!-- night side: away from the Sun -->
-        <circle cx="500" cy="500" r="110" fill="url(#gNight)"/>
+        <circle id="nightSide" cx="500" cy="500" r="110" fill="url(#gNight)"/>
         <circle cx="500" cy="500" r="110" fill="none" stroke="var(--gold)" stroke-width="1.6" opacity="0.85"/>
         <!-- the axis of the world -->
         <circle cx="500" cy="500" r="4.5" fill="var(--gold-bright)"/>
@@ -424,9 +424,6 @@
   var hasRequestedLocation = false;
 
   function updateDialForLocation() {
-    var dialRotation = -userLongitude;
-    $("ticks").setAttribute("transform", "rotate(" + dialRotation + " 500 500)");
-    $("medallions").setAttribute("transform", "rotate(" + dialRotation + " 500 500)");
     render(true);
   }
 
@@ -545,25 +542,27 @@
     var t = now.getTime();
     var f = currentFraction(t);
 
-    var dialRotation = -userLongitude;
-
     // The Moon, hand of the clock — one turn per lunation, counterclockwise
     var deg = f * 360;
     var p = orbitPoint(f, 270);
-    var moonHandRot = dialRotation - deg;
-    $("moonHand").setAttribute("transform", "rotate(" + moonHandRot + " 500 500)");
-    // Moon is both translated and rotated with the dial
-    var moonRot = "rotate(" + dialRotation + " 500 500) translate(" + (p.x - 500) + " " + (p.y - 500) + ")";
-    $("moon").setAttribute("transform", moonRot);
+    $("moonHand").setAttribute("transform", "rotate(" + (-deg) + " 500 500)");
+    $("moon").setAttribute("transform", "translate(" + p.x + " " + p.y + ")");
 
-    // The Earth turns on its axis: the meridian at the user's location appears at the top.
-    // The user's local noon (when their meridian faces the Sun) is when their spade is at the top.
+    // The Earth stays fixed with user's location at the top
+    // Earth rotates on its axis: show which parts are in daylight
     var utcH = now.getUTCHours() + now.getUTCMinutes() / 60 + now.getUTCSeconds() / 3600;
-    // Adjust UTC hour to local solar time at user's longitude (1 hour per 15° of longitude)
     var localH = utcH + (userLongitude / 15);
-    // Rotate so user's meridian is always at top, then show current local rotation
-    var earthRot = dialRotation - ((localH - 12) / 24) * 360;
-    $("earthTex").setAttribute("transform", "rotate(" + earthRot + " 500 500)");
+    // The Earth texture rotates based on local time, with user's meridian at top
+    var earthRot = -userLongitude - ((localH - 12) / 24) * 360;
+    var earthRotStr = "rotate(" + earthRot + " 500 500)";
+    $("earthTex").setAttribute("transform", earthRotStr);
+    $("nightSide").setAttribute("transform", earthRotStr);
+
+    // The Sun rotates clockwise around the Earth showing local time
+    // At local noon, Sun points to top (user's location)
+    // As hours pass, Sun rotates clockwise (westward)
+    var sunAngle = ((localH - 12) / 24) * 360;
+    $("sunHand").setAttribute("transform", "rotate(" + sunAngle + " 500 500)");
 
     // Texts
     var idx = phaseIndex(f);
