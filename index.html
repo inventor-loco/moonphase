@@ -286,6 +286,12 @@
         <circle cx="500" cy="500" r="4.5" fill="var(--gold-bright)"/>
       </g>
 
+      <!-- ── THE USER · a spade hand pointing to your location ── -->
+      <g id="userHand">
+        <line x1="500" y1="480" x2="500" y2="200" stroke="var(--gold-dim)" stroke-width="1.8" opacity="0.7"/>
+        <path d="M 500 260 L 505 275 L 500 285 L 495 275 Z" fill="var(--gold-dim)" opacity="0.7"/>
+      </g>
+
       <!-- ── THE MOON · the turning hand ── -->
       <g id="moonHand">
         <line x1="500" y1="380" x2="500" y2="248" stroke="var(--gold)" stroke-width="2" opacity="0.85"/>
@@ -413,6 +419,42 @@
   }
   function $(id) { return document.getElementById(id); }
 
+  // ── Geolocation ──────────────────────────────────────────
+  var userLongitude = -15.6; // default: Las Palmas de Gran Canaria
+  var hasRequestedLocation = false;
+
+  function updateDialForLocation() {
+    var dialRotation = -userLongitude;
+    $("ticks").setAttribute("transform", "rotate(" + dialRotation + " 500 500)");
+    $("medallions").setAttribute("transform", "rotate(" + dialRotation + " 500 500)");
+    render(true);
+  }
+
+  function requestUserLocation() {
+    if (hasRequestedLocation) return;
+    hasRequestedLocation = true;
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(
+      function (pos) {
+        userLongitude = pos.coords.longitude;
+        localStorage.setItem('userLongitude', userLongitude);
+        updateDialForLocation();
+      },
+      function () {
+        // Permission denied or error — use default (Las Palmas)
+      }
+    );
+  }
+
+  // Try to load saved location or request one
+  var saved = localStorage.getItem('userLongitude');
+  if (saved !== null) {
+    userLongitude = parseFloat(saved);
+  } else {
+    requestUserLocation();
+  }
+
   // Point on the dial: fraction f of the cycle, counterclockwise from
   // the top (the Sun) — the way the Moon truly travels, seen from
   // above the North Pole.
@@ -503,16 +545,25 @@
     var t = now.getTime();
     var f = currentFraction(t);
 
+    var dialRotation = -userLongitude;
+
     // The Moon, hand of the clock — one turn per lunation, counterclockwise
     var deg = f * 360;
     var p = orbitPoint(f, 270);
-    $("moonHand").setAttribute("transform", "rotate(" + (-deg) + " 500 500)");
-    $("moon").setAttribute("transform", "translate(" + p.x + " " + p.y + ")");
+    var moonHandRot = dialRotation - deg;
+    $("moonHand").setAttribute("transform", "rotate(" + moonHandRot + " 500 500)");
+    // Moon is both translated and rotated with the dial
+    var moonRot = "rotate(" + dialRotation + " 500 500) translate(" + (p.x - 500) + " " + (p.y - 500) + ")";
+    $("moon").setAttribute("transform", moonRot);
 
-    // The Earth turns on its axis: the meridian facing the Sun is at noon.
+    // The Earth turns on its axis: the meridian at the user's location appears at the top.
+    // The user's local noon (when their meridian faces the Sun) is when their spade is at the top.
     var utcH = now.getUTCHours() + now.getUTCMinutes() / 60 + now.getUTCSeconds() / 3600;
-    var rot = -((utcH - 12) / 24) * 360;
-    $("earthTex").setAttribute("transform", "rotate(" + rot + " 500 500)");
+    // Adjust UTC hour to local solar time at user's longitude (1 hour per 15° of longitude)
+    var localH = utcH + (userLongitude / 15);
+    // Rotate so user's meridian is always at top, then show current local rotation
+    var earthRot = dialRotation - ((localH - 12) / 24) * 360;
+    $("earthTex").setAttribute("transform", "rotate(" + earthRot + " 500 500)");
 
     // Texts
     var idx = phaseIndex(f);
@@ -542,7 +593,7 @@
   buildTicks();
   buildMedallions();
   buildSunRays();
-  render(true);
+  updateDialForLocation();
   consultOracle();
   // The hands barely move (Earth: 0.25°/min, Moon: 0.5°/h) — repainting
   // once a minute keeps the big coastline path cheap on a phone.
